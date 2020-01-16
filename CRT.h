@@ -117,6 +117,8 @@ typedef enum ColorElements_ {
    CPU_SOFTIRQ,
    CPU_STEAL,
    CPU_GUEST,
+   CPU_TEMP,
+   CPU_FREQ,
    PANEL_EDIT,
    SCREENS_OTH_BORDER,
    SCREENS_OTH_TEXT,

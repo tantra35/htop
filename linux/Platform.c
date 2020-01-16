@@ -14,6 +14,8 @@ in the source distribution for its full text.
 
 #include "Meter.h"
 #include "CPUMeter.h"
+#include "CpuFreqMeter.h"
+#include "CpuTempMeter.h"
 #include "MemoryMeter.h"
 #include "SwapMeter.h"
 #include "TasksMeter.h"
@@ -149,8 +151,41 @@ MeterClass* Platform_meterTypes[] = {
    &LeftCPUs2Meter_class,
    &RightCPUs2Meter_class,
    &BlankMeter_class,
+   &CpuTempMeter_class,
+   &CpuFreqMeter_class,
    NULL
 };
+
+int Platform_getCpuTemp() {
+   int Temp = 0;
+
+   FILE* fd = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+   if (!fd) {
+       fd = fopen("/sys/devices/virtual/thermal/thermal_zone0/temp", "r");
+   }
+   if (fd) {
+      int n = fscanf(fd, "%d", &Temp);
+      fclose(fd);
+      if (n <= 0) return 0;
+   }
+   return Temp;
+}
+
+int Platform_getCpuFreq(int cpu) {
+   int Freq = 0;
+   FILE* fd;
+   char szbuf[256];
+   // sleep_ms(30);
+   xSnprintf(szbuf, sizeof(szbuf), "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_cur_freq", cpu);
+   fd = fopen(szbuf, "r");
+   if (fd) {
+      int n;
+      n = fscanf(fd, "%d", &Freq);
+      fclose(fd);
+      if (n <= 0) return 0;
+   }
+   return Freq;
+}
 
 int Platform_getUptime() {
    double uptime = 0;

@@ -48,4 +48,8 @@ void Platform_setSwapValues(Meter* this);
 
 char* Platform_getProcessEnv(pid_t pid);
 
+int Platform_getCpuTemp();
+
+int Platform_getCpuFreq(int cpu);
+
 #endif
