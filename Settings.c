@@ -177,13 +177,20 @@ static void Settings_readMeterModes(Settings* this, char* line, int side) {
    this->meterColumns[side].modes = modes;
 }
 
+#define ENABLEDEFAULTSHOWTEMPFREQ 0
+
 static void Settings_defaultMeters(Settings* this) {
-   int sizes[] = { 3, 3 };
+   int sizes[] = { 4, 3 };
    if (this->cpuCount > 4) {
       sizes[1]++;
    }
+#if ENABLEDEFAULTSHOWTEMPFREQ
+   sizes[0] += 1;
+   sizes[1] += this->cpuCount;
+#endif
+
    for (int i = 0; i < 2; i++) {
-      this->meterColumns[i].names = xCalloc(sizes[i] + 1, sizeof(char*));
+      this->meterColumns[i].names = xCalloc(sizes[i], sizeof(char*));
       this->meterColumns[i].modes = xCalloc(sizes[i], sizeof(int));
       this->meterColumns[i].len = sizes[i];
    }
@@ -207,13 +214,28 @@ static void Settings_defaultMeters(Settings* this) {
    this->meterColumns[0].modes[1] = BAR_METERMODE;
    this->meterColumns[0].names[2] = xStrdup("Swap");
    this->meterColumns[0].modes[2] = BAR_METERMODE;
-   
+
+#if ENABLEDEFAULTSHOWTEMPFREQ
+   this->meterColumns[0].names[3] = xStrdup("CpuTemp");
+   this->meterColumns[0].modes[3] = TEXT_METERMODE;
+#endif
+
    this->meterColumns[1].names[r] = xStrdup("Tasks");
    this->meterColumns[1].modes[r++] = TEXT_METERMODE;
    this->meterColumns[1].names[r] = xStrdup("LoadAverage");
    this->meterColumns[1].modes[r++] = TEXT_METERMODE;
    this->meterColumns[1].names[r] = xStrdup("Uptime");
    this->meterColumns[1].modes[r++] = TEXT_METERMODE;
+
+#if ENABLEDEFAULTSHOWTEMPFREQ
+   for (int cpu=1; cpu <= this->cpuCount; ++cpu) {
+       char caption[16];
+       xSnprintf(caption, sizeof(caption), "CpuFreq%d: ", cpu);
+
+       this->meterColumns[1].names[r] = xStrdup(caption);
+       this->meterColumns[1].modes[r++] = TEXT_METERMODE;
+   }
+#endif
 }
 
 static const char* toFieldName(int i) {
