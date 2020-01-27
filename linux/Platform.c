@@ -31,6 +31,7 @@ in the source distribution for its full text.
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <dirent.h>
 
 /*{
 #include "Action.h"
@@ -159,15 +160,28 @@ MeterClass* Platform_meterTypes[] = {
 int Platform_getCpuTemp() {
    int Temp = 0;
 
-   FILE* fd = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
-   if (!fd) {
-       fd = fopen("/sys/devices/virtual/thermal/thermal_zone0/temp", "r");
+   DIR* lThermal = opendir("/sys/devices/virtual/thermal");
+   if (lThermal != NULL) {
+     struct dirent * lThermalEnt;
+
+     while ((lThermalEnt = readdir(lThermal)) != NULL) {
+       if (strncmp(lThermalEnt->d_name, "thermal_zone", 12) == 0) {
+         char lpath[PATH_MAX];
+         snprintf(lpath, PATH_MAX, "/sys/devices/virtual/thermal/%s/temp", lThermalEnt->d_name);
+         FILE* fd = fopen(lpath, "r");
+         if (!fd) {
+            continue;
+         }
+
+         int n = fscanf(fd, "%d", &Temp);
+         fclose(fd);
+         if (n <= 0) continue; else break;
+       }
+     };
+
+     closedir(lThermal);
    }
-   if (fd) {
-      int n = fscanf(fd, "%d", &Temp);
-      fclose(fd);
-      if (n <= 0) return 0;
-   }
+
    return Temp;
 }
 
